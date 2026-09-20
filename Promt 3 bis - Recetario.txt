@@ -1,0 +1,109 @@
+Vas a implementar el módulo "parser determinista" de la aplicación Recetario.
+
+CONTEXTO
+
+Recetario guarda recetas como texto crudo + imágenes. El parser determinista es una capa OPCIONAL, BEST-EFFORT, que intenta pre-rellenar algunos campos de la receta a partir del texto crudo y de los metadatos de la URL. NO usa IA. NO usa LLM. NO usa OCR.
+
+El parser NUNCA falla en duro. Si algo no se puede extraer, se devuelve null y se sigue. El texto crudo se guarda siempre, haya parser o no.
+
+OBJETIVO DEL MÓDULO
+
+Dada una entrada compuesta por:
+  - url (opcional)
+  - texto (opcional)
+  - plataforma (instagram | facebook | youtube | whatsapp | web | manual)
+
+Devolver un objeto Receta parcial con:
+  - titulo
+  - ingredientes[]   (cada uno: { nombre, cantidad_texto })
+  - pasos[]          (cada uno: { orden, texto })
+  - etiquetas[]
+  - fuente_url
+  - fuente_plataforma
+  - imagen_portada (si se puede obtener de Open Graph)
+
+Todos los campos son opcionales. Los que no se puedan extraer van a null o [].
+
+SUBMÓDULOS A IMPLEMENTAR
+
+1. extractOpenGraph(url) → { titulo, descripcion, imagen_portada }
+   - Hace GET a la URL.
+   - Parsea metaetiquetas og:title, og:description, og:image.
+   - Fallback a <title> y <meta name="description"> si no hay Open Graph.
+   - Timeout de 10 s. Si falla, devuelve nulls.
+
+2. extractReadableText(url) → string | null
+   - Hace GET a la URL.
+   - Usa readability (o equivalente) para extraer el texto principal del artículo.
+   - Si la URL no es un artículo (por ejemplo, es un reel de Instagram), devuelve null.
+   - Timeout de 10 s.
+
+3. extractYouTubeTranscript(url) → string | null
+   - Solo se ejecuta si el dominio es youtube.com o youtu.be.
+   - Obtiene la transcripción de subtítulos automáticos.
+   - Si no hay subtítulos, devuelve null.
+
+4. extractTitulo(texto) → string | null
+   - Devuelve la primera línea no vacía del texto.
+   - Ignora líneas que sean solo emojis o hashtags.
+   - Recorta a 120 caracteres.
+   - Si no hay texto, devuelve null.
+
+5. extractIngredientes(texto) → [{ nombre, cantidad_texto }]
+   - Busca líneas que empiecen por "-", "•", "*" o "·".
+   - O líneas que contengan patrones tipo "200 g", "1 taza", "2 cdas", "3 cdtas", "1/2 kg".
+   - Cada línea se separa en cantidad_texto (la parte numérica con unidad si existe) y nombre (el resto).
+   - Si no se puede separar, cantidad_texto = null y nombre = la línea completa.
+   - Si no hay ingredientes detectables, devuelve [].
+
+6. extractPasos(texto) → [{ orden, texto }]
+   - Busca líneas que empiecen por "1.", "2.", "3."... o "Paso 1", "Paso 2"...
+   - También líneas que empiecen por "-" dentro de una sección titulada "Preparación", "Instrucciones", "Pasos" o "Elaboración".
+   - Asigna orden secuencial (1, 2, 3...).
+   - Si no hay pasos detectables, devuelve [].
+
+7. extractEtiquetas(texto) → string[]
+   - Extrae hashtags del texto (#palabra).
+   - Normaliza a minúsculas.
+   - Elimina duplicados.
+   - Máximo 10.
+
+8. parseReceta({ url, texto, plataforma }) → Receta parcial
+   - Orquesta los submódulos en este orden:
+     1. Si hay url → extractOpenGraph(url) y extractYouTubeTranscript(url) si aplica.
+     2. Si hay url y no hay texto → intentar extractReadableText(url).
+     3. Combinar textos disponibles (url + texto del usuario) priorizando el del usuario.
+     4. extractTitulo, extractIngredientes, extractPasos, extractEtiquetas sobre el texto combinado.
+     5. Devolver objeto Receta parcial.
+   - Si un submódulo lanza excepción, se captura y se trata como null.
+
+REGLAS ESTRICTAS
+
+- NO uses IA, LLM ni OCR.
+- NO añadas dependencias pesadas. Prefiere librerías pequeñas y mantenidas.
+- NO modifiques el texto crudo. El parser solo DERIVA campos, nunca reescribe la fuente.
+- NO falles en duro. Cualquier error se captura y se devuelve null o [].
+- Los campos derivados son siempre editables por el usuario después.
+- Si una línea es ambigua, es mejor dejarla fuera que inventar.
+- El parser debe ser determinista: misma entrada → misma salida.
+
+FORMATO DE SALIDA DEL MÓDULO
+
+Devuelve un objeto con esta forma exacta:
+
+{
+  "titulo": string | null,
+  "imagen_portada": string | null,
+  "fuente_url": string | null,
+  "fuente_plataforma": string | null,
+  "ingredientes": [ { "nombre": string, "cantidad_texto": string | null } ],
+  "pasos": [ { "orden": number, "texto": string } ],
+  "etiquetas": [ string ]
+}
+
+CÓMO QUIERO QUE TRABAJES
+
+1. Primero dime qué librerías propones para cada submódulo y por qué. Espera mi confirmación.
+2. Después genera el código módulo a módulo, con ruta de archivo y código completo.
+3. Incluye tests unitarios con los ejemplos de entrada/salida que te doy abajo.
+4. No generes todo de golpe. Espera mi feedback entre módulos.

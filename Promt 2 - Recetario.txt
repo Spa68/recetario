@@ -1,0 +1,16 @@
+Empecemos por el backend. Genera:
+
+1. Estructura de carpetas completa.
+2. Esquema SQL de la tabla `recetas` con índices y full-text search.
+3. Configuración del proyecto (package.json o pyproject.toml).
+4. Endpoints:
+   - POST /api/captura
+   - GET /api/recetas
+   - GET /api/recetas/:id
+   - PATCH /api/recetas/:id
+   - DELETE /api/recetas/:id
+   - GET /api/buscar
+
+Para cada endpoint: ruta, método, body esperado, respuesta esperada, y código completo.
+
+No generes el parser determinista todavía. Ese es el siguiente módulo.

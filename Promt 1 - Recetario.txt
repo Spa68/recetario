@@ -1,0 +1,109 @@
+Vas a actuar como desarrollador full-stack senior para construir una aplicación llamada "Recetario". A continuación te doy el contexto completo del proyecto. Léelo entero antes de responder. No propongas cambios de alcance sin que yo lo pida explícitamente.
+
+# QUÉ ES RECETARIO
+
+Recetario es una aplicación multiplataforma (iOS, Android, Web/PC) que permite capturar recetas de cocina encontradas en redes sociales (Instagram, Facebook, YouTube, WhatsApp, webs) y almacenarlas en un repositorio personal consultable.
+
+El principio de diseño central es: capturar con fricción mínima, guardar el contenido tal cual, consultar sin esfuerzo.
+
+# DECISIONES YA TOMADAS (NO LAS CUESTIONES)
+
+1. NO se usa IA/LLM para extraer, estructurar ni interpretar recetas.
+2. NO se hace OCR de imágenes. Las imágenes se guardan tal cual.
+3. NO se integran APIs oficiales de redes sociales.
+4. Se guarda el TEXTO CRUDO tal cual se captura, más las imágenes.
+5. Un parser determinista (regex + Open Graph + readability) puede pre-rellenar campos de forma BEST-EFFORT, nunca es requisito.
+6. La captura en iOS se hace mediante Shortcuts (Atajos), porque Safari iOS no soporta Web Share Target.
+7. La captura en Android/Web se hace mediante PWA con Web Share Target API.
+8. La búsqueda es full-text sobre el texto crudo, no filtros por ingrediente.
+
+# RESTRICCIONES CRÍTICAS (NO NEGOCIABLES)
+
+A. COSTE CERO ABSOLUTO: todo el stack debe funcionar dentro de capas gratuitas permanentes. Coste mensual objetivo: 0 €.
+B. SIN MÉTODOS DE PAGO: no se proporciona tarjeta de crédito, PayPal ni ningún otro medio de pago a NINGÚN servicio, ni siquiera para activar planes gratuitos.
+C. Si una herramienta requiere método de pago para activarse (aunque la cuota sea gratuita), NO se usa. Busca alternativa.
+D. NO introduzcas ninguna llamada a LLM, API de OpenAI, Anthropic, Gemini, etc.
+E. NO introduzcas OCR (Tesseract, visión, etc.).
+F. NO uses colas de procesamiento ni workers pesados. Todo debe ser lineal y simple.
+
+# STACK OBLIGATORIO (TODO GRATUITO, SIN MÉTODO DE PAGO)
+
+- Frontend: PWA con React (o Vue). Desplegada en Vercel (capa gratuita).
+- Backend: Supabase Edge Functions (capa gratuita, 500,000 llamadas/mes).
+- Base de datos: Supabase Postgres (capa gratuita, 500 MB).
+- Autenticación: Supabase Auth (capa gratuita, 50,000 MAU).
+- Storage de imágenes: Supabase Storage (capa gratuita, 1 GB).
+- Extracción web: readability + open-graph-scraper (open source).
+- Transcripción YouTube: yt-dlp --write-auto-sub (open source).
+- Puente iOS: Shortcuts con "Mostrar en hoja de compartir", tipo "Cualquiera".
+- Puente Android/Web: PWA + Web Share Target API.
+- Dominio: subdominio gratuito de Vercel (*.vercel.app).
+
+NO propongas Cloudflare R2, AWS, GCP, Azure, ni ningún servicio que requiera tarjeta de crédito para activarse, aunque su capa sea gratuita.
+
+Si crees que necesitas algo fuera de este stack, pregúntame antes. No lo implementes por tu cuenta.
+
+# MODELO DE DATOS (v1)
+
+Receta {
+  id
+  titulo              // inferido o editado a mano
+  texto_crudo         // el texto original tal cual
+  imagenes[]          // URLs a Supabase Storage
+  fuente_plataforma   // instagram | facebook | youtube | whatsapp | web | manual
+  fuente_url
+  etiquetas[]         // manuales o extraídas de hashtags
+  notas_personales
+  fecha_captura
+  estado              // borrador | revisada
+  // Campos derivados opcionales (best-effort, siempre editables):
+  ingredientes[]      // { nombre, cantidad_texto }
+  pasos[]             // { orden, texto }
+}
+
+# MÓDULOS A CONSTRUIR
+
+1. API REST (Supabase Edge Functions):
+   - POST /api/captura
+   - GET  /api/recetas
+   - GET  /api/recetas/:id
+   - PATCH /api/recetas/:id
+   - DELETE /api/recetas/:id
+   - GET  /api/buscar?q=...
+   - POST /api/imagenes
+
+2. Parser determinista (best-effort, sin IA).
+
+3. PWA (Vercel):
+   - Registro como Share Target.
+   - Listado, detalle, búsqueda, edición, modo cocina.
+   - Subida manual de imágenes.
+
+4. Shortcut de iOS (documentación paso a paso).
+
+# AVISO SOBRE SUPABASE
+
+El proyecto gratuito de Supabase se pausa tras 7 días de inactividad. Los datos no se pierden. Se reactiva manualmente desde el panel de control. Ten esto en cuenta al diseñar: no asumas disponibilidad 24/7 sin intervención.
+
+# CÓMO QUIERO QUE TRABAJES
+
+1. Antes de escribir código, hazme un plan numerado de los pasos que vas a dar.
+2. Espera mi confirmación antes de empezar a generar código.
+3. Trabaja módulo a módulo, no todo de golpe.
+4. Cuando generes código, incluye siempre:
+   - Ruta del archivo.
+   - Código completo y funcional (no fragmentos).
+   - Comentarios solo donde aporten valor.
+5. Cuando termines un módulo, espera mi feedback antes de pasar al siguiente.
+6. Si algo del SRS es ambiguo, pregúntame antes de asumir.
+7. Si crees que necesitas una herramienta que requiere método de pago, PÁRATE y dímelo. No la uses.
+
+# QUÉ ESPERO DE TU PRIMERA RESPUESTA
+
+Un plan numerado con:
+- Orden de construcción de los módulos.
+- Confirmación del stack (o dudas si las tienes).
+- Estructura de carpetas del proyecto.
+- Qué necesitas de mí antes de empezar (cuentas gratuitas ya creadas, credenciales, decisiones pendientes, etc.).
+
+No escribas código todavía. Solo el plan.

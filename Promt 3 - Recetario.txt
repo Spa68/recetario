@@ -1,0 +1,13 @@
+Ahora el parser determinista. Genera:
+
+1. Módulo de extracción Open Graph (og:title, og:image, og:description).
+2. Módulo de extracción de texto con readability.
+3. Módulo de extracción de transcripción de YouTube.
+4. Módulo de pre-rellenado con regex:
+   - Título: primera línea no vacía del texto.
+   - Ingredientes: líneas que empiezan por -, •, * o contienen \d+\s*(g|ml|taza|cda|cdta).
+   - Pasos: líneas que empiezan por número seguido de punto o "Paso N".
+   - Etiquetas: hashtags (#palabra).
+5. Función orquestadora que llama a todo en orden y devuelve un objeto Receta con los campos rellenos o null.
+
+Recuerda: nunca falla en duro. Si algo no se puede extraer, se devuelve null y se sigue.

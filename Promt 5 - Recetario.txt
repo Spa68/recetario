@@ -1,0 +1,9 @@
+Ahora el Shortcut de iOS. No generes código, genera documentación paso a paso:
+
+1. Cómo crear el atajo en la app Atajos.
+2. Qué acciones añadir en orden.
+3. Cómo configurar "Mostrar en hoja de compartir" con tipo "Cualquiera".
+4. Cómo recibir URL, texto e imagen simultáneamente.
+5. Cómo hacer el POST al backend con autenticación.
+6. Cómo manejar el caso en que solo llegue texto, o solo URL, o solo imagen.
+7. Cómo probarlo desde Instagram, YouTube y WhatsApp.

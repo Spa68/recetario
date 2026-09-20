@@ -1,0 +1,14 @@
+Ahora la PWA. Genera:
+
+1. manifest.json con Share Target registrado (acepta text, url, files).
+2. Service Worker que intercepta el share y redirige al formulario de captura.
+3. Vistas:
+   - Listado de recetas (con imagen, título, etiquetas).
+   - Detalle de receta.
+   - Modo cocina (texto grande, pantalla siempre encendida con Wake Lock API).
+   - Formulario de captura manual (pegar URL o texto, subir imagen).
+   - Formulario de edición.
+   - Búsqueda full-text.
+4. Cliente API para hablar con el backend.
+
+Sin frameworks pesados si es posible. Si usas React o Vue, justifícalo.
