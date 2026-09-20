@@ -8,6 +8,7 @@ import { Listado } from "./pages/Listado";
 import { Detalle } from "./pages/Detalle";
 import { Edicion } from "./pages/Edicion";
 import { ModoCocina } from "./pages/ModoCocina";
+import { Compartir } from "./pages/Compartir";
 
 const estiloEnlace = ({ isActive }: { isActive: boolean }) => ({
   padding: "8px 16px",
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/recetas/:id" element={<Detalle />} />
           <Route path="/recetas/:id/editar" element={<Edicion />} />
           <Route path="/recetas/:id/cocina" element={<ModoCocina />} />
+          <Route path="/compartir" element={<Compartir />} />
         </Routes>
       </div>
     </BrowserRouter>
