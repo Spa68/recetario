@@ -17,6 +17,19 @@ caducan en ~1 hora, así que no se puede guardar uno fijo). Eso significa:
 - **Anon key**: la misma que usa la PWA, en `apps/web/.env` (`VITE_SUPABASE_ANON_KEY`).
 - **Tu email y contraseña** de Recetario (con los que entras en la PWA).
 
+## Cómo crear una variable con nombre (se repite mucho en esta guía)
+
+Cada vez que la guía dice **"Definir variable `X` = resultado de la acción anterior"**, haz esto:
+
+1. Añade la acción **"Definir variable"** (*Set Variable*) justo después de la acción cuyo
+   resultado quieres guardar.
+2. Toca el campo **"Variable Name"** / nombre de variable → escribe el nombre indicado (p. ej. `Plataforma`).
+3. Toca el otro campo (el del valor/input) → normalmente ya aparece seleccionado el resultado de
+   la acción justo anterior; si no, tócalo y elige esa variable de la lista que aparece.
+
+A partir de ahora, cuando quieras usar `X` en un campo de una acción posterior, toca ese campo y
+busca `X` en la lista de variables disponibles.
+
 ## Construcción del Shortcut, paso a paso
 
 Abre la app **Atajos** (Shortcuts) en el iPhone → pestaña "Atajos" → botón **+** (nuevo atajo).
@@ -30,52 +43,54 @@ Ponle de nombre **"Recetario"**.
 
 ### 2. Extraer lo compartido (funciona sin importar qué app lo mandó)
 
-Añade estas acciones en orden (todas empiezan igual: busca la acción por su nombre en el buscador
-de acciones de Atajos):
-
 1. **"Obtener URLs de entrada"** (*Get URLs from Input*) → Entrada: **Contenido compartido**
    (la variable mágica que Atajos pone automáticamente).
-   → Renombra el resultado (toca la variable de salida y usa "Renombrar variable") a `URLCompartida`.
+   Definir variable `URLCompartida` = resultado de esta acción.
 2. **"Obtener texto de entrada"** (*Get Text from Input*) → Entrada: **Contenido compartido**.
-   → Renombra el resultado a `TextoCompartido`.
+   Definir variable `TextoCompartido` = resultado de esta acción.
 3. **"Obtener imágenes de entrada"** (*Get Images from Input*) → Entrada: **Contenido compartido**.
-   → Renombra el resultado a `ImagenesCompartidas`.
+   Definir variable `ImagenesCompartidas` = resultado de esta acción.
 
 Cualquiera de las tres puede salir vacía según lo que se haya compartido — es normal, el backend
 ya sabe manejarlo (guarda lo que haya, y como último recurso guarda la URL si no hay más texto).
 
 ### 3. Detectar la plataforma de origen (best-effort, igual que en la web)
 
-4. **"Texto"** → escribe `manual` → renómbralo a `Plataforma` (esta es la variable que iremos
-   sobrescribiendo).
+4. **"Texto"** → escribe `manual`.
+   Definir variable `Plataforma` = resultado de esta acción.
 5. **"Si"** (*If*) → Condición: `URLCompartida` **contiene** `instagram.com`
-   → Dentro: **"Establecer variable"** `Plataforma` = `instagram`
+   → Dentro: **"Texto"** → escribe `instagram` → Definir variable `Plataforma` = este texto
+   (sí, se vuelve a "definir" la misma variable; eso sobrescribe su valor).
    → **"Si no"**:
-     - **"Si"** → `URLCompartida` contiene `facebook.com` → `Plataforma` = `facebook`
+     - **"Si"** → `URLCompartida` contiene `facebook.com` → **"Texto"** `facebook` → Definir variable `Plataforma`.
      - **"Si no"**:
-       - **"Si"** → `URLCompartida` contiene `youtube.com` **o** contiene `youtu.be` → `Plataforma` = `youtube`
+       - **"Si"** → `URLCompartida` contiene `youtube.com` **o** contiene `youtu.be` → **"Texto"** `youtube` → Definir variable `Plataforma`.
        - **"Si no"**:
-         - **"Si"** → `URLCompartida` **tiene algún valor** → `Plataforma` = `web`
+         - **"Si"** → `URLCompartida` **tiene algún valor** → **"Texto"** `web` → Definir variable `Plataforma`.
          - **"Fin si"** (repite "Fin si" para cerrar cada "Si" que hayas abierto)
 
 Si te resulta muy tedioso anidar tantos "Si", puedes saltarte este paso 3 entero y dejar
-`Plataforma` fija en `manual` — el backend sigue funcionando igual, solo pierdes el detalle de
-qué red social era.
+`Plataforma` fija en `manual` (solo el paso 4) — el backend sigue funcionando igual, solo pierdes
+el detalle de qué red social era.
 
 ### 4. Convertir las imágenes a base64
 
-6. **"Lista"** (*List*) → vacía → renómbrala a `ListaImagenes`.
+6. **"Lista"** (*List*) → vacía.
+   Definir variable `ListaImagenes` = resultado de esta acción.
 7. **"Repetir con cada elemento"** (*Repeat with Each*) → Elementos: `ImagenesCompartidas`.
    Dentro del repetir:
-   - **"Codificar media"** (*Base64 Encode*) → Entrada: **Elemento del repetir** (*Repeat Item*)
-     → renombra a `ImagenB64`.
+   - **"Codificar media"** (*Base64 Encode*) → Entrada: **Elemento del repetir** (*Repeat Item*).
+     Definir variable `ImagenB64` = resultado.
    - **"Obtener detalles de imágenes"** (*Get Details of Images*) → Propiedad: **Tipo de medio**
-     (*Media Type*) → Entrada: **Elemento del repetir** → renombra a `TipoImagen`.
+     (*Media Type*) → Entrada: **Elemento del repetir**.
+     Definir variable `TipoImagen` = resultado.
    - **"Diccionario"** (*Dictionary*) con dos claves:
      - `data` = `ImagenB64`
      - `content_type` = `TipoImagen`
-     → renombra el diccionario a `ImagenDict`.
+     Definir variable `ImagenDict` = este diccionario.
    - **"Añadir a variable"** (*Add to Variable*) → Variable: `ListaImagenes`, Valor: `ImagenDict`.
+     (Esta acción no necesita "Definir variable" después: "Añadir a variable" ya modifica
+     `ListaImagenes` directamente.)
 8. **"Fin de repetir"**.
 
 ### 5. Construir el cuerpo de la petición
@@ -85,14 +100,14 @@ qué red social era.
    - `fuente_url` = `URLCompartida`
    - `fuente_plataforma` = `Plataforma`
    - `imagenes_base64` = `ListaImagenes`
-   → renombra a `CuerpoCaptura`.
+   Definir variable `CuerpoCaptura` = este diccionario.
 
 ### 6. Iniciar sesión para conseguir un token fresco
 
 10. **"Diccionario"** con:
     - `email` = (tu email de Recetario, escrito directamente)
     - `password` = (tu contraseña de Recetario, escrita directamente)
-    → renombra a `CredencialesLogin`.
+    Definir variable `CredencialesLogin` = este diccionario.
 11. **"Obtener contenido de URL"** (*Get Contents of URL*):
     - URL: `https://boqeyguefphutycynxma.supabase.co/auth/v1/token?grant_type=password`
     - Método: **POST**
@@ -100,9 +115,10 @@ qué red social era.
       - `apikey` = (tu anon key)
       - `Content-Type` = `application/json`
     - Cuerpo de la petición: **JSON**, valor = `CredencialesLogin`
-    → renombra el resultado a `RespuestaLogin`.
+    Definir variable `RespuestaLogin` = resultado de esta acción.
 12. **"Obtener valor del diccionario"** (*Get Dictionary Value*) → Clave: `access_token`,
-    Diccionario: `RespuestaLogin` → renombra a `AccessToken`.
+    Diccionario: `RespuestaLogin`.
+    Definir variable `AccessToken` = resultado.
 
 ### 7. Llamar a /api/captura
 
@@ -114,13 +130,13 @@ qué red social era.
         `AccessToken` justo detrás, sin salto de línea)
       - `Content-Type` = `application/json`
     - Cuerpo de la petición: **JSON**, valor = `CuerpoCaptura`
-    → renombra el resultado a `RespuestaCaptura`.
+    Definir variable `RespuestaCaptura` = resultado de esta acción.
 
 ### 8. Avisar si funcionó o si falló
 
 14. **"Obtener valor del diccionario"** → Clave: `error`, Diccionario: `RespuestaCaptura`,
-    marca **"Obtener valor si existe"** (*Get Value if Exists*, para que no falle si no hay error)
-    → renombra a `MensajeError`.
+    marca **"Obtener valor si existe"** (*Get Value if Exists*, para que no falle si no hay error).
+    Definir variable `MensajeError` = resultado.
 15. **"Si"** → `MensajeError` **tiene algún valor**:
     - **"Mostrar notificación"** → "Recetario" / "Error: MensajeError"
     - **"Si no"**:
