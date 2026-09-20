@@ -1,14 +1,12 @@
 import { ChangeEvent, FormEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { enviarCaptura } from "../lib/api";
 import type { FuentePlataforma } from "../types";
 
 const PLATAFORMAS: FuentePlataforma[] = ["manual", "web", "instagram", "facebook", "youtube", "whatsapp"];
 
-interface Props {
-  onGuardada: () => void;
-}
-
-export function Captura({ onGuardada }: Props) {
+export function Captura() {
+  const navigate = useNavigate();
   const [textoCrudo, setTextoCrudo] = useState("");
   const [fuenteUrl, setFuenteUrl] = useState("");
   const [fuentePlataforma, setFuentePlataforma] = useState<FuentePlataforma>("manual");
@@ -33,13 +31,13 @@ export function Captura({ onGuardada }: Props) {
 
     setGuardando(true);
     try {
-      await enviarCaptura({ textoCrudo, fuenteUrl, fuentePlataforma, imagenes });
+      const receta = await enviarCaptura({ textoCrudo, fuenteUrl, fuentePlataforma, imagenes });
       setTextoCrudo("");
       setFuenteUrl("");
       setFuentePlataforma("manual");
       setImagenes([]);
       setAviso("Receta guardada.");
-      onGuardada();
+      navigate(`/recetas/${receta.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
